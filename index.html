@@ -1,30 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="icon" type="image/svg+xml" href="/assets/images/logo.png" />
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-        />
-        <meta
-            name="description"
-            content="Find patterns and trends in the campus placements. Predict your placement chances and salary."
-        />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Placement Analysis Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 font-sans">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,400;0,600;0,800;1,400;1,600&family=Space+Mono&display=swap"
-            rel="stylesheet"
-        />
+    <nav class="bg-indigo-600 p-4 text-white shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-tight">Placement Analysis Dashboard</h1>
+            <div class="space-x-6">
+                <a href="#" class="hover:text-indigo-200">Dashboard</a>
+                <a href="#" class="hover:text-indigo-200">Analysis</a>
+                <a href="#" class="hover:text-indigo-200">Predictor</a>
+            </div>
+        </div>
+    </nav>
 
-        <!-- Title -->
-        <title>PlacementTrack - Campus Placement Analyzer</title>
-    </head>
-    <body>
-        <div id="root"></div>
-        <script type="module" src="/src/main.jsx"></script>
-    </body>
+    <main class="container mx-auto py-8 px-4">
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <p class="text-sm text-gray-500 uppercase font-bold">Total Students</p>
+                <p class="text-3xl font-bold text-gray-800">1,240</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
+                <p class="text-sm text-gray-500 uppercase font-bold">Placed %</p>
+                <p class="text-3xl font-bold text-gray-800">84.2%</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500">
+                <p class="text-sm text-gray-500 uppercase font-bold">Avg. CTC</p>
+                <p class="text-3xl font-bold text-gray-800">₹8.5 LPA</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500">
+                <p class="text-sm text-gray-500 uppercase font-bold">Top Offer</p>
+                <p class="text-3xl font-bold text-gray-800">₹42 LPA</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">Placement by Department</h3>
+                <canvas id="deptChart"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">CTC Distribution Trends</h3>
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md border border-indigo-100">
+                <h3 class="text-xl font-bold mb-4 text-indigo-600">Placement Predictor</h3>
+                <form id="predictionForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">CGPA</label>
+                        <input type="number" step="0.01" class="w-full mt-1 p-2 border rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g. 8.5">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Internships</label>
+                        <input type="number" class="w-full mt-1 p-2 border rounded-md" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Backlogs</label>
+                        <input type="number" class="w-full mt-1 p-2 border rounded-md" placeholder="0">
+                    </div>
+                    <button type="button" onclick="predict()" class="w-full bg-indigo-600 text-white py-2 rounded-md font-bold hover:bg-indigo-700 transition">
+                        Check Eligibility
+                    </button>
+                </form>
+                <div id="result" class="mt-4 p-3 hidden rounded-md text-center font-bold"></div>
+            </div>
+
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md overflow-x-auto">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">Recent Placements</h3>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stream</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 text-sm">
+                        <tr>
+                            <td class="px-6 py-4 font-medium">Nikshay Verma</td>
+                            <td class="px-6 py-4">CS</td>
+                            <td class="px-6 py-4">Google</td>
+                            <td class="px-6 py-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Placed</span></td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-medium">Akshit Sharma</td>
+                            <td class="px-6 py-4">IT</td>
+                            <td class="px-6 py-4">TCS</td>
+                            <td class="px-6 py-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Placed</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Department Chart
+        const ctxDept = document.getElementById('deptChart').getContext('2d');
+        new Chart(ctxDept, {
+            type: 'bar',
+            data: {
+                labels: ['CS', 'IT', 'ECE', 'Mech', 'Civil'],
+                datasets: [{
+                    label: '% Students Placed',
+                    data: [95, 88, 72, 60, 55],
+                    backgroundColor: 'rgba(79, 70, 229, 0.7)'
+                }]
+            }
+        });
+
+        // Trend Chart
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: ['2021', '2022', '2023', '2024', '2025'],
+                datasets: [{
+                    label: 'Average Package (LPA)',
+                    data: [5.2, 6.1, 7.5, 8.2, 8.5],
+                    borderColor: '#10b981',
+                    fill: false,
+                    tension: 0.1
+                }]
+            }
+        });
+
+        // Mock Prediction Function
+        function predict() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+            
+            // Simulation logic
+            const chance = Math.random() > 0.4;
+            if (chance) {
+                resultDiv.innerText = "High Probability of Placement!";
+                resultDiv.classList.add('bg-green-100', 'text-green-800');
+            } else {
+                resultDiv.innerText = "Improvement Needed in Core Subjects.";
+                resultDiv.classList.add('bg-red-100', 'text-red-800');
+            }
+            resultDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
 </html>
